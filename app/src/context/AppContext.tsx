@@ -1,6 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useReducer, useEffect, useCallback, ReactNode } from 'react';
+import { useSession, signOut } from 'next-auth/react';
 import {
   AppState,
   AppAction,
@@ -220,6 +221,22 @@ const STORAGE_KEYS = {
 // Provider Component
 export function AppProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(appReducer, initialState);
+  const { data: session } = useSession();
+
+  // Sync NextAuth session with app state
+  useEffect(() => {
+    if (session?.user) {
+      const user: User = {
+        id: session.user.id || session.user.email!,
+        name: session.user.name || '',
+        email: session.user.email!,
+        avatar: session.user.image || undefined,
+        createdAt: new Date(),
+        preferences: DEFAULT_USER_PREFERENCES,
+      };
+      dispatch({ type: 'LOGIN', payload: user });
+    }
+  }, [session]);
 
   // Load data from localStorage on mount
   useEffect(() => {
@@ -343,7 +360,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const logout = useCallback(() => {
+  const logout = useCallback(async () => {
+    await signOut({ callbackUrl: '/' });
     localStorage.removeItem(STORAGE_KEYS.USER);
     dispatch({ type: 'SET_USER', payload: null });
   }, []);

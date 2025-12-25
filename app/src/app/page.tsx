@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { signIn } from 'next-auth/react';
 import { AppProvider, useApp } from '@/context/AppContext';
 import { ChatProvider } from '@/context/ChatContext';
 import { ToastProvider } from '@/components/Toast';
@@ -96,22 +97,18 @@ function MainApp() {
 
             <div className="grid grid-cols-2 gap-3">
               <button
-                disabled
-                className="py-2.5 px-4 bg-gray-100 dark:bg-gray-700 text-gray-400 font-medium rounded-xl cursor-not-allowed"
+                onClick={() => signIn('google')}
+                className="py-2.5 px-4 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600 text-gray-900 dark:text-white font-medium rounded-xl transition-colors"
               >
                 Google
               </button>
               <button
-                disabled
-                className="py-2.5 px-4 bg-gray-100 dark:bg-gray-700 text-gray-400 font-medium rounded-xl cursor-not-allowed"
+                onClick={() => signIn('github')}
+                className="py-2.5 px-4 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600 text-gray-900 dark:text-white font-medium rounded-xl transition-colors"
               >
                 GitHub
               </button>
             </div>
-
-            <p className="text-xs text-center text-gray-400 mt-4">
-              OAuth providers coming soon. Use demo mode for now.
-            </p>
           </div>
 
           <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
