@@ -6,14 +6,11 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "preview": "npm run build && npx serve@latest out",
     "lint": "eslint"
   },
   "dependencies": {
-    "@cloudflare/next-on-pages": "^1.13.16",
     "@eslint/eslintrc": "^3.3.3",
     "@heroicons/react": "^2.2.0",
-    "@opennextjs/cloudflare": "^1.14.7",
     "@types/react-syntax-highlighter": "^15.5.13",
     "next": "15.2.3",
     "next-auth": "^5.0.0-beta.30",
