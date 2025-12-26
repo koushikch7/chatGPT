@@ -79,6 +79,14 @@ if ! check_db_connection; then
 fi
 
 echo ""
+echo "Generating Prisma client for current architecture..."
+if ./node_modules/.bin/prisma generate; then
+    echo "${GREEN}✓ Prisma client generated${NC}"
+else
+    echo "${YELLOW}⚠ Prisma generate warning (may still work)${NC}"
+fi
+
+echo ""
 echo "Running database migrations..."
 if ./node_modules/.bin/prisma migrate deploy; then
     echo "${GREEN}✓ Migrations completed successfully${NC}"

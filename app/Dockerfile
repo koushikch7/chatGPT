@@ -42,12 +42,18 @@ ENV NEXT_TELEMETRY_DISABLED=1
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
-# Copy Prisma files for migrations
+# Copy Prisma files for migrations and runtime generation
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
 COPY --from=builder /app/node_modules/prisma ./node_modules/prisma
 COPY --from=builder /app/node_modules/.bin ./node_modules/.bin
+
+# Create directory for Prisma engines and set permissions
+RUN mkdir -p /app/node_modules/.prisma/client && \
+    chown -R nextjs:nodejs /app/node_modules/.prisma && \
+    chown -R nextjs:nodejs /app/node_modules/@prisma && \
+    chown -R nextjs:nodejs /app/prisma
 
 # Copy built assets
 COPY --from=builder /app/public ./public
