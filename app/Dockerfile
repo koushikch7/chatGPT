@@ -49,11 +49,15 @@ COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
 COPY --from=builder /app/node_modules/prisma ./node_modules/prisma
 COPY --from=builder /app/node_modules/.bin ./node_modules/.bin
 
-# Create directory for Prisma engines and set permissions
-RUN mkdir -p /app/node_modules/.prisma/client && \
-    chown -R nextjs:nodejs /app/node_modules/.prisma && \
+# Set full read-write permissions for Prisma directories to allow runtime generation
+RUN chown -R nextjs:nodejs /app/node_modules/.prisma && \
     chown -R nextjs:nodejs /app/node_modules/@prisma && \
-    chown -R nextjs:nodejs /app/prisma
+    chown -R nextjs:nodejs /app/node_modules/prisma && \
+    chown -R nextjs:nodejs /app/node_modules/.bin && \
+    chown -R nextjs:nodejs /app/prisma && \
+    chmod -R 775 /app/node_modules/.prisma && \
+    chmod -R 775 /app/node_modules/@prisma && \
+    chmod -R 775 /app/node_modules/prisma
 
 # Copy built assets
 COPY --from=builder /app/public ./public
