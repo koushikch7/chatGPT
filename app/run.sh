@@ -128,6 +128,15 @@ run_setup() {
             read -p "MySQL Host [localhost]: " db_host
             db_host=${db_host:-localhost}
             
+            # Convert localhost/127.0.0.1 to host.docker.internal for Docker
+            original_host="$db_host"
+            if [ "$db_host" == "localhost" ] || [ "$db_host" == "127.0.0.1" ]; then
+                echo ""
+                echo -e "${YELLOW}Note: 'localhost' inside Docker refers to the container itself.${NC}"
+                echo -e "${YELLOW}Converting to 'host.docker.internal' to reach your host machine.${NC}"
+                db_host="host.docker.internal"
+            fi
+            
             read -p "MySQL Port [3306]: " db_port
             db_port=${db_port:-3306}
             
@@ -145,12 +154,36 @@ run_setup() {
                 exit 1
             fi
             
-            # Construct and save DATABASE_URL
+            # Test connection from host first (using original host)
+            echo ""
+            echo -e "${CYAN}Testing database connection...${NC}"
+            if command -v mysql &> /dev/null; then
+                if mysql -h "$original_host" -P "$db_port" -u "$db_user" -p"$db_pass" -e "SELECT 1" "$db_name" &> /dev/null; then
+                    echo -e "${GREEN}✓ Database connection successful!${NC}"
+                else
+                    echo -e "${YELLOW}⚠ Could not verify connection. Make sure:${NC}"
+                    echo "  - MySQL is running on ${original_host}:${db_port}"
+                    echo "  - Database '${db_name}' exists"
+                    echo "  - User '${db_user}' has access"
+                    echo ""
+                    read -p "Continue anyway? [y/N]: " continue_anyway
+                    if [[ ! "$continue_anyway" =~ ^[Yy]$ ]]; then
+                        exit 1
+                    fi
+                fi
+            else
+                echo -e "${YELLOW}MySQL client not installed. Skipping connection test.${NC}"
+            fi
+            
+            # Construct and save DATABASE_URL (with docker-compatible host)
             DATABASE_URL="mysql://${db_user}:${db_pass}@${db_host}:${db_port}/${db_name}"
             sed -i "s|DATABASE_URL=.*|DATABASE_URL=${DATABASE_URL}|" .env.local
             
             echo ""
             echo -e "${GREEN}✓ Database configured: ${db_host}:${db_port}/${db_name}${NC}"
+            if [ "$db_host" == "host.docker.internal" ]; then
+                echo -e "${CYAN}  (Docker will connect to your host machine's MySQL)${NC}"
+            fi
             ;;
             
         *)
