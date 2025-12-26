@@ -3,16 +3,7 @@
 
 generator client {
   provider      = "prisma-client-js"
-  // Support multiple architectures: x64, ARM64, with OpenSSL 1.1.x and 3.0.x
-  binaryTargets = [
-    "native",
-    "linux-musl-openssl-3.0.x",
-    "linux-musl-arm64-openssl-3.0.x",
-    "linux-musl-openssl-1.1.x",
-    "linux-musl-arm64-openssl-1.1.x",
-    "debian-openssl-3.0.x",
-    "linux-arm64-openssl-3.0.x"
-  ]
+  binaryTargets = ["native", "linux-musl", "linux-musl-openssl-3.0.x", "linux-musl-arm64-openssl-1.1.x", "linux-musl-arm64-openssl-3.0.x", "debian-openssl-1.1.x", "debian-openssl-3.0.x", "linux-arm64-openssl-1.1.x", "linux-arm64-openssl-3.0.x"]
 }
 
 datasource db {
