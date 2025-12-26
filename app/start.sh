@@ -80,11 +80,15 @@ fi
 
 echo ""
 echo "Generating Prisma client for current architecture..."
+# Run as root to have write permissions
 if ./node_modules/.bin/prisma generate; then
     echo "${GREEN}✓ Prisma client generated${NC}"
 else
     echo "${YELLOW}⚠ Prisma generate warning (may still work)${NC}"
 fi
+
+# Fix permissions after generation
+chown -R nextjs:nodejs /app/node_modules/.prisma 2>/dev/null || true
 
 echo ""
 echo "Running database migrations..."
@@ -107,4 +111,5 @@ echo "${GREEN}   Application Starting...${NC}"
 echo "${GREEN}=============================================${NC}"
 echo ""
 
-exec node server.js
+# Drop root privileges and run as nextjs user for security
+exec su-exec nextjs node server.js

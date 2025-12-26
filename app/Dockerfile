@@ -32,8 +32,8 @@ RUN npm run build
 FROM base AS runner
 WORKDIR /app
 
-# Install openssl for Prisma and netcat for health checks
-RUN apk add --no-cache openssl netcat-openbsd
+# Install openssl for Prisma, netcat for health checks, and su-exec for privilege dropping
+RUN apk add --no-cache openssl netcat-openbsd su-exec
 
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
@@ -68,8 +68,8 @@ COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/start.sh ./start.sh
 RUN chmod +x ./start.sh
 
-# Set correct permissions
-USER nextjs
+# Don't switch to nextjs user yet - start.sh needs root for prisma generate
+# The start.sh script will handle this
 
 # Expose port
 EXPOSE 3000
