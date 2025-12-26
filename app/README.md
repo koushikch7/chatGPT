@@ -1,95 +1,197 @@
-# Multi-AI Chat
+# ChatGPT Multi-AI Platform
 
-A ChatGPT-like application that integrates with multiple AI models (OpenRouter, Gemini AI, etc.) hosted on Cloudflare Pages.
+A ChatGPT-like enterprise application that integrates with multiple AI models (OpenRouter, Gemini AI, Claude, etc.) with secure SSO authentication and persistent storage.
 
 ## Features
 
-- **Multi-AI Support**: Chat with various AI models including OpenRouter, Google Gemini, and Anthropic Claude.
-- **User Authentication**: Secure login system (demo version uses local state).
-- **API Key Management**: Users can configure their own API keys for different providers.
-- **Conversation Memory**: Short-term memory for chat sessions.
-- **Secure Storage**: API keys are stored securely per user (in production, use Cloudflare D1 or similar).
-- **Responsive UI**: Modern, clean interface inspired by Google AI Studio and OpenAI ChatGPT.
+- **Multi-AI Support**: Chat with various AI models including OpenRouter, Google Gemini, and Anthropic Claude
+- **SSO Authentication**: Secure login with Google and GitHub OAuth
+- **API Key Management**: Users can configure their own API keys for different providers (encrypted storage)
+- **Conversation Memory**: Short-term memory for chat sessions
+- **Profile Memories**: Permanent memories stored per user
+- **Project Organization**: Group conversations into projects
+- **Secure Storage**: API keys encrypted with AES-256-CBC
+- **Responsive UI**: Modern, clean interface inspired by Google AI Studio and ChatGPT
 
 ## Tech Stack
 
 - **Frontend**: Next.js 15, React 18, TypeScript, Tailwind CSS
-- **Deployment**: Cloudflare Pages (static export)
-- **Backend**: Cloudflare Functions/Workers (planned for API calls)
-- **Database**: Cloudflare D1 (planned for user data and keys)
+- **Authentication**: NextAuth.js v5 with Google & GitHub OAuth
+- **Database**: MySQL 8.0 with Prisma ORM
+- **Deployment**: Docker with docker-compose
+- **Security**: AES-256-CBC encryption for API keys
 
-## Getting Started
+---
 
-1. Clone the repository
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
-3. Run the development server:
-   ```bash
-   npm run dev
-   ```
-4. Open [http://localhost:3000](http://localhost:3000) in your browser.
+## Quick Start
 
-### Dev Container (VS Code)
-
-This workspace runs in a dev container on Ubuntu 24.04.3. If using VS Code:
-
-- Open the repository in VS Code
-- Reopen in container when prompted
-- Use the integrated terminal to run `npm run dev`
-
-## Build & Export
-
-Create a static export suitable for Cloudflare Pages:
+### Option 1: Interactive Setup (Recommended)
 
 ```bash
-npm run build
+# Clone the repository
+git clone https://github.com/koushikch7/chatGPT.git
+cd chatGPT/app
+
+# Run interactive setup wizard
+chmod +x setup.sh
+./setup.sh
+
+# Start with Docker MySQL
+docker compose --profile mysql up -d
+
+# Or start with external MySQL
+docker compose --profile external up -d
 ```
 
-Output is generated in `out/`. You can preview locally:
+### Option 2: Docker MySQL (Local Development)
 
 ```bash
-npm run start
+# Copy environment template
+cp .env.local.example .env.local
+
+# Edit .env.local with your OAuth credentials
+# (See SSO_SETUP.md for OAuth setup instructions)
+
+# Start with Docker MySQL container
+docker compose --profile mysql up -d
 ```
 
-## Deployment to Cloudflare Pages
+### Option 3: External MySQL (Production)
 
-1. Build the project:
-   ```bash
-   npm run build
-   ```
-2. The `out/` directory contains the static files.
-3. Deploy to Cloudflare Pages:
-   - In Cloudflare dashboard, create a Pages project
-   - Set build command to `npm run build`
-   - Set build output directory to `out`
-   - Optionally configure environment variables in Pages settings
+```bash
+# Copy environment template
+cp .env.local.example .env.local
 
-## Backend Implementation
+# Update DATABASE_URL to point to your MySQL server:
+# DATABASE_URL=mysql://user:password@your-mysql-host:3306/chatgpt
 
-For production, implement the following:
+# Start app only (no MySQL container)
+docker compose --profile external up -d
+```
 
-- **Authentication**: Use Clerk, Auth0, or Cloudflare Zero Trust.
-- **API Key Storage**: Use Cloudflare D1 database to store encrypted API keys per user.
-- **AI API Calls**: Use Cloudflare Functions to proxy requests to AI providers, ensuring keys are not exposed to the client.
-- **Conversation Memory**: Store chat history in D1 or KV.
+---
+
+## Configuration
+
+### Environment Variables
+
+Copy `.env.local.example` to `.env.local` and configure:
+
+```bash
+# Database (choose one)
+DATABASE_URL=mysql://chatgpt:chatgptpassword@mysql:3306/chatgpt  # Docker MySQL
+DATABASE_URL=mysql://user:password@your-host:3306/chatgpt       # External MySQL
+
+# NextAuth (required)
+AUTH_SECRET=your-secret-here  # Generate with: openssl rand -base64 32
+NEXTAUTH_URL=https://your-domain.com
+
+# OAuth Providers (at least one required)
+GOOGLE_CLIENT_ID=your-google-client-id
+GOOGLE_CLIENT_SECRET=your-google-client-secret
+GITHUB_CLIENT_ID=your-github-client-id
+GITHUB_CLIENT_SECRET=your-github-client-secret
+```
+
+### OAuth Setup
+
+See [SSO_SETUP.md](SSO_SETUP.md) for detailed OAuth configuration instructions.
+
+### Nginx Reverse Proxy
+
+See [nginx.conf.example](nginx.conf.example) for production nginx configuration with SSL.
+
+---
+
+## Docker Commands
+
+```bash
+# Start with Docker MySQL
+docker compose --profile mysql up -d
+
+# Start with external MySQL
+docker compose --profile external up -d
+
+# View logs
+docker compose logs -f
+
+# Stop all containers
+docker compose down
+
+# Stop and remove volumes (WARNING: deletes data)
+docker compose down -v
+
+# Rebuild after code changes
+docker compose build --no-cache
+docker compose --profile mysql up -d
+```
+
+---
+
+## Development
+
+### Local Development (without Docker)
+
+```bash
+# Install dependencies
+npm install
+
+# Generate Prisma client
+npx prisma generate
+
+# Run migrations
+npx prisma migrate dev
+
+# Start development server
+npm run dev
+```
+
+### Database Migrations
+
+```bash
+# Create a new migration
+npx prisma migrate dev --name your_migration_name
+
+# Apply migrations in production
+npx prisma migrate deploy
+
+# View database in Prisma Studio
+npx prisma studio
+```
+
+---
 
 ## Supported AI Models
 
-- OpenRouter (GPT-3.5, GPT-4, etc.)
-- Google Gemini Pro
-- Anthropic Claude 3 Haiku
+- **OpenRouter**: GPT-4, GPT-3.5, Claude, Llama, Mixtral, and more
+- **Google Gemini**: Gemini Pro, Gemini Pro Vision
+- **Anthropic**: Claude 3 Opus, Sonnet, Haiku
 
-## Environment Variables
+---
 
-Create a `.env.local` file with:
+## Architecture
 
 ```
-# For production auth (e.g., Clerk)
-NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=your_key
-CLERK_SECRET_KEY=your_secret
+┌─────────────────┐     ┌─────────────────┐
+│   Nginx/SSL     │────▶│   Next.js App   │
+│   (Port 443)    │     │   (Port 3000)   │
+└─────────────────┘     └────────┬────────┘
+                                 │
+                    ┌────────────┴────────────┐
+                    │                         │
+              ┌─────▼─────┐           ┌───────▼───────┐
+              │  NextAuth │           │  Prisma ORM   │
+              │  (OAuth)  │           │  (Database)   │
+              └───────────┘           └───────┬───────┘
+                                              │
+                                      ┌───────▼───────┐
+                                      │    MySQL      │
+                                      │  (Docker or   │
+                                      │   External)   │
+                                      └───────────────┘
 ```
+
+---
 
 ## Contributing
 
@@ -97,6 +199,10 @@ CLERK_SECRET_KEY=your_secret
 2. Create a feature branch
 3. Make your changes
 4. Submit a pull request
+
+## License
+
+MIT
 
 ## License
 

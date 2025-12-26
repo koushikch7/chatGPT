@@ -1,10 +1,30 @@
 version: '3.8'
 
+# ===========================================
+# ChatGPT Multi-AI App - Docker Compose
+# ===========================================
+#
+# Usage Options:
+#
+# Option 1: With Docker MySQL (recommended for local dev)
+#   docker compose --profile mysql up -d
+#
+# Option 2: With External MySQL (for production)
+#   docker compose up -d
+#   (Make sure DATABASE_URL in .env.local points to your external MySQL)
+#
+# Option 3: Start everything with profiles
+#   docker compose --profile mysql --profile app up -d
+#
+# ===========================================
+
 services:
-  # MySQL Database
+  # MySQL Database (optional - use profile to enable)
   mysql:
     image: mysql:8.0
     container_name: chatgpt-mysql
+    profiles:
+      - mysql
     restart: unless-stopped
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-rootpassword}
@@ -15,6 +35,8 @@ services:
       - mysql_data:/var/lib/mysql
     ports:
       - "3306:3306"
+    networks:
+      - chatgpt-network
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD:-rootpassword}"]
       interval: 10s
@@ -22,12 +44,14 @@ services:
       retries: 5
       start_period: 30s
 
-  # Next.js Application
-  chatgpt-app:
+  # Next.js Application (with Docker MySQL)
+  chatgpt-app-with-mysql:
     build:
       context: .
       dockerfile: Dockerfile
     container_name: chatgpt-app
+    profiles:
+      - mysql
     restart: unless-stopped
     ports:
       - "3000:3000"
@@ -40,12 +64,43 @@ services:
       - NODE_ENV=production
       - AUTH_TRUST_HOST=true
       - DATABASE_URL=mysql://${MYSQL_USER:-chatgpt}:${MYSQL_PASSWORD:-chatgptpassword}@mysql:3306/${MYSQL_DATABASE:-chatgpt}
+    networks:
+      - chatgpt-network
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 60s
+
+  # Next.js Application (with External MySQL)
+  chatgpt-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: chatgpt-app-external
+    profiles:
+      - external
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env.local
+    environment:
+      - NODE_ENV=production
+      - AUTH_TRUST_HOST=true
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+networks:
+  chatgpt-network:
+    driver: bridge
 
 volumes:
   mysql_data:

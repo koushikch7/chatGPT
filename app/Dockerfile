@@ -32,8 +32,8 @@ RUN npm run build
 FROM base AS runner
 WORKDIR /app
 
-# Install openssl for Prisma
-RUN apk add --no-cache openssl
+# Install openssl for Prisma and netcat for health checks
+RUN apk add --no-cache openssl netcat-openbsd
 
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
