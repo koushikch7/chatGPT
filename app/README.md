@@ -23,49 +23,53 @@ A ChatGPT-like enterprise application that integrates with multiple AI models (O
 
 ---
 
+---
+
 ## Quick Start
 
-### Option 1: Interactive Setup (Recommended)
+### One Command Launch (Recommended)
 
 ```bash
 # Clone the repository
 git clone https://github.com/koushikch7/chatGPT.git
 cd chatGPT/app
 
-# Run interactive setup wizard
-chmod +x setup.sh
-./setup.sh
+# Run everything with one command
+chmod +x run.sh
+./run.sh
+```
+
+The `run.sh` script will:
+1. ✅ Check if setup is needed
+2. ✅ Run interactive setup wizard (first time only)
+3. ✅ Generate AUTH_SECRET automatically
+4. ✅ Start Docker with correct profile
+
+### Available Commands
+
+```bash
+./run.sh          # Start the app (runs setup if needed)
+./run.sh stop     # Stop all containers
+./run.sh restart  # Restart all containers
+./run.sh logs     # View logs
+./run.sh build    # Rebuild and start
+./run.sh status   # Show container status
+./run.sh setup    # Run setup wizard again
+./run.sh clean    # Stop and remove all data (WARNING!)
+```
+
+### Manual Setup (Alternative)
+
+```bash
+# Copy environment template
+cp .env.local.example .env.local
+
+# Edit .env.local with your credentials
 
 # Start with Docker MySQL
 docker compose --profile mysql up -d
 
-# Or start with external MySQL
-docker compose --profile external up -d
-```
-
-### Option 2: Docker MySQL (Local Development)
-
-```bash
-# Copy environment template
-cp .env.local.example .env.local
-
-# Edit .env.local with your OAuth credentials
-# (See SSO_SETUP.md for OAuth setup instructions)
-
-# Start with Docker MySQL container
-docker compose --profile mysql up -d
-```
-
-### Option 3: External MySQL (Production)
-
-```bash
-# Copy environment template
-cp .env.local.example .env.local
-
-# Update DATABASE_URL to point to your MySQL server:
-# DATABASE_URL=mysql://user:password@your-mysql-host:3306/chatgpt
-
-# Start app only (no MySQL container)
+# Or with external MySQL
 docker compose --profile external up -d
 ```
 
